@@ -209,12 +209,13 @@ const HomeHero = ({
                 transition={{ duration: 0.8, delay: 0.1, ease: EASE }}
                 className="mobile-image-frame relative aspect-[4/5] rounded-[1.5rem] overflow-hidden bg-gradient-to-br from-ink to-ink-soft shadow-[0_30px_70px_-35px_rgba(23,51,43,0.45)]"
               >
-                <GatsbyImage
-                  image={image.gatsbyImageData}
-                  alt={`Portrait of ${name}`}
-                  className="!absolute inset-0 w-full h-full"
-                  imgClassName="object-cover"
-                />
+              <GatsbyImage
+  image={image.gatsbyImageData}
+  alt={`Portrait of ${name}`}
+  className="!absolute inset-0 w-full h-full"
+  imgClassName="object-cover"
+  loading="eager"
+/>
                 <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-ink/80 via-ink/30 to-transparent" />
                 <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between text-paper text-[0.75rem] font-medium">
                   <span className="uppercase tracking-wider">{name}</span>

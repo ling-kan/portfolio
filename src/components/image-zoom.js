@@ -43,13 +43,7 @@ const ImageZoomDialog = ({ source, alt, onClose }) => {
   }, [onClose])
 
   return (
-    <div
-      className="image-zoom-backdrop"
-      role="presentation"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose()
-      }}
-    >
+    <div className="image-zoom-backdrop">
       <div
         className="image-zoom-dialog"
         role="dialog"
@@ -97,10 +91,11 @@ const ImageZoom = ({ image, alt = '', children, className = '' }) => {
       >
         {children}
       </button>
-      {source && createPortal(
-        <ImageZoomDialog source={source} alt={alt} onClose={close} />,
-        document.body,
-      )}
+      {source &&
+        createPortal(
+          <ImageZoomDialog source={source} alt={alt} onClose={close} />,
+          document.body,
+        )}
     </>
   )
 }
@@ -110,17 +105,21 @@ export const ImageZoomContent = ({ html = '', className = '' }) => {
   const contentRef = useRef(null)
   const close = useCallback(() => setActiveImage(null), [])
 
+  // Make every image inside the rendered HTML a proper interactive element.
   useEffect(() => {
     const images = contentRef.current?.querySelectorAll('img') || []
     images.forEach((image) => {
       image.tabIndex = 0
       image.setAttribute('role', 'button')
-      image.setAttribute('aria-label', image.alt ? `View larger image: ${image.alt}` : 'View larger image')
+      image.setAttribute(
+        'aria-label',
+        image.alt ? `View larger image: ${image.alt}` : 'View larger image',
+      )
       image.title = 'View larger image'
     })
-  }, [className, html])
+  }, [html])
 
-  const showImage = (image) => {
+  const showImage = useCallback((image) => {
     image.focus()
     const source = {
       src: image.currentSrc || image.src,
@@ -128,26 +127,33 @@ export const ImageZoomContent = ({ html = '', className = '' }) => {
       sizes: '100vw',
     }
     if (source.src) setActiveImage({ source, alt: image.alt || '' })
-  }
+  }, [])
 
-  const onClick = (event) => {
-    if (event.target instanceof HTMLImageElement) {
-      event.preventDefault()
-      event.stopPropagation()
-      showImage(event.target)
-    }
-  }
+  // Event delegation: click and keyboard handling for rich-content images.
+  const onClick = useCallback(
+    (event) => {
+      if (event.target instanceof HTMLImageElement) {
+        event.preventDefault()
+        event.stopPropagation()
+        showImage(event.target)
+      }
+    },
+    [showImage],
+  )
 
-  const onKeyDown = (event) => {
-    if (
-      event.target instanceof HTMLImageElement &&
-      (event.key === 'Enter' || event.key === ' ')
-    ) {
-      event.preventDefault()
-      event.stopPropagation()
-      showImage(event.target)
-    }
-  }
+  const onKeyDown = useCallback(
+    (event) => {
+      if (
+        event.target instanceof HTMLImageElement &&
+        (event.key === 'Enter' || event.key === ' ')
+      ) {
+        event.preventDefault()
+        event.stopPropagation()
+        showImage(event.target)
+      }
+    },
+    [showImage],
+  )
 
   return (
     <>
@@ -156,12 +162,20 @@ export const ImageZoomContent = ({ html = '', className = '' }) => {
         className={`image-zoom-content ${className}`}
         onClick={onClick}
         onKeyDown={onKeyDown}
+        role="presentation"
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+        tabIndex={-1}
         dangerouslySetInnerHTML={{ __html: html }}
       />
-      {activeImage && createPortal(
-        <ImageZoomDialog source={activeImage.source} alt={activeImage.alt} onClose={close} />,
-        document.body,
-      )}
+      {activeImage &&
+        createPortal(
+          <ImageZoomDialog
+            source={activeImage.source}
+            alt={activeImage.alt}
+            onClose={close}
+          />,
+          document.body,
+        )}
     </>
   )
 }

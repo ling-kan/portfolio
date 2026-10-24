@@ -1,9 +1,9 @@
 import React from 'react'
-import { motion, useScroll, useSpring } from 'motion/react'
+import { motion, useScroll, useTransform } from 'motion/react'
 
 const ScrollProgress = () => {
   const { scrollYProgress } = useScroll()
-  const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: 0.001 })
+  const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1])
 
   return (
     <motion.div

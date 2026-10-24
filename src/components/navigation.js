@@ -11,10 +11,8 @@ const Navigation = ({ navList }) => {
   const reduce = useSafeReducedMotion()
   const [mobileNav, setMobileNav] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [hidden, setHidden] = useState(false)
   const lastScrollY = useRef(0)
   const scrolledRef = useRef(false)
-  // const hiddenRef = useRef(false)
   const { scrollY } = useScroll()
 
   useMotionValueEvent(scrollY, 'change', (y) => {
@@ -23,16 +21,11 @@ const Navigation = ({ navList }) => {
 
     lastScrollY.current = y
     const nextScrolled = y > 20
-    // const nextHidden = y > 240 && y > previousY && !mobileNav
 
     if (scrolledRef.current !== nextScrolled) {
       scrolledRef.current = nextScrolled
       setScrolled(nextScrolled)
     }
-    // if (hiddenRef.current !== nextHidden) {
-    //   hiddenRef.current = nextHidden
-    //   setHidden(nextHidden)
-    // }
   })
 
   // Lock page scroll while the mobile menu is open
@@ -54,13 +47,13 @@ const Navigation = ({ navList }) => {
       <motion.header
         role="banner"
         className="fixed top-0 inset-x-0 z-50 pt-3 md:pt-4"
-        animate={{ y: hidden ? '-120%' : '0%' }}
-        transition={{ duration: reduce ? 0 : 0.25, ease: EASE }}
       >
         <Container as="nav" aria-label="Main">
           <div
             className={`flex items-center justify-between rounded-full pl-5 pr-2 py-2 transition-[background-color,border-color,box-shadow] duration-300 ${
-              scrolled || mobileNav ? 'bg-paper/95 shadow-[0_10px_40px_-15px_rgba(23,51,43,0.35)] border border-white/70' : 'border border-transparent'
+              scrolled || mobileNav
+                ? 'bg-paper/95 shadow-[0_10px_40px_-15px_rgba(23,51,43,0.35)] border border-white/70'
+                : 'border border-transparent'
             }`}
           >
             <Logo onClick={() => setMobileNav(false)} />
@@ -97,12 +90,20 @@ const Navigation = ({ navList }) => {
                 <span className="relative block w-5 h-3">
                   <motion.span
                     className="absolute left-0 right-0 h-[2px] bg-paper rounded-full"
-                    animate={mobileNav ? { top: '50%', rotate: 45, y: '-50%' } : { top: '0%', rotate: 0, y: '0%' }}
+                    animate={
+                      mobileNav
+                        ? { top: '50%', rotate: 45, y: '-50%' }
+                        : { top: '0%', rotate: 0, y: '0%' }
+                    }
                     transition={{ duration: 0.25, ease: EASE }}
                   />
                   <motion.span
                     className="absolute left-0 right-0 h-[2px] bg-paper rounded-full"
-                    animate={mobileNav ? { bottom: '50%', rotate: -45, y: '50%' } : { bottom: '0%', rotate: 0, y: '0%' }}
+                    animate={
+                      mobileNav
+                        ? { bottom: '50%', rotate: -45, y: '50%' }
+                        : { bottom: '0%', rotate: 0, y: '0%' }
+                    }
                     transition={{ duration: 0.25, ease: EASE }}
                   />
                 </span>
@@ -118,7 +119,11 @@ const Navigation = ({ navList }) => {
             id="mobile-menu"
             key="mobile-menu"
             className="fixed inset-0 z-40 bg-ink text-paper md:hidden flex flex-col pt-28 pb-10 overflow-y-auto"
-            initial={reduce ? false : { clipPath: 'circle(0% at calc(100% - 3rem) 2.5rem)' }}
+            initial={
+              reduce
+                ? false
+                : { clipPath: 'circle(0% at calc(100% - 3rem) 2.5rem)' }
+            }
             animate={{ clipPath: 'circle(150% at calc(100% - 3rem) 2.5rem)' }}
             exit={{ clipPath: 'circle(0% at calc(100% - 3rem) 2.5rem)' }}
             transition={{ duration: reduce ? 0 : 0.25, ease: EASE }}
@@ -126,27 +131,41 @@ const Navigation = ({ navList }) => {
             <Container className="relative flex-1 flex flex-col">
               <p className="eyebrow text-paper/65 mb-6">Menu</p>
               <ul className="p-0 m-0 flex-1">
-                {[...(navList || []), { title: "Let's talk", url: '/#contact' }].map((item, i) => (
-                  <motion.li
-                    key={item.url}
-                    className="list-none border-b border-paper/10 overflow-hidden"
-                    initial={reduce ? false : { opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: reduce ? 0 : 0.25, delay: reduce ? 0 : 0.05 + i * 0.03, ease: EASE }}
-                  >
-                    <Link
-                      to={item.url}
-                      onClick={() => setMobileNav(false)}
-                      className="flex items-baseline gap-4 py-4 !text-paper"
+                {[...(navList || []), { title: "Let's talk", url: '/#contact' }].map(
+                  (item, i) => (
+                    <motion.li
+                      key={item.url}
+                      className="list-none border-b border-paper/10 overflow-hidden"
+                      initial={reduce ? false : { opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: reduce ? 0 : 0.25,
+                        delay: reduce ? 0 : 0.05 + i * 0.03,
+                        ease: EASE,
+                      }}
                     >
-                      <span className="eyebrow text-accent">{String(i + 1).padStart(2, '0')}</span>
-                      <span className="font-display text-4xl font-semibold tracking-tight">{item.title}</span>
-                    </Link>
-                  </motion.li>
-                ))}
+                      <Link
+                        to={item.url}
+                        onClick={() => setMobileNav(false)}
+                        className="flex items-baseline gap-4 py-4 !text-paper"
+                      >
+                        <span className="eyebrow text-accent">
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                        <span className="font-display text-4xl font-semibold tracking-tight">
+                          {item.title}
+                        </span>
+                      </Link>
+                    </motion.li>
+                  ),
+                )}
               </ul>
               <div className="mt-10 text-paper">
-                <Socials width="w-7" className="justify-start" iconClassName="fill-grey !text-paper/70" />
+                <Socials
+                  width="w-7"
+                  className="justify-start"
+                  iconClassName="fill-grey !text-paper/70"
+                />
               </div>
             </Container>
           </motion.div>

@@ -13,7 +13,11 @@ const Marquee = ({ children, duration = 40, gap = '3rem', reverse = false, class
     <div
       ref={ref}
       className={`marquee ${inView ? 'marquee--active' : ''} ${reverse ? 'marquee--reverse' : ''} ${className}`}
-      style={{ '--marquee-duration': `${duration}s`, '--marquee-gap': gap }}
+      style={{
+        '--marquee-duration': `${duration}s`,
+        '--marquee-gap': gap,
+        contain: 'layout paint',
+      }}
     >
       <div className="marquee__track">{children}</div>
       <div className="marquee__track" aria-hidden="true" {...{ inert: '' }}>{children}</div>

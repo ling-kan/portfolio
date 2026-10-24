@@ -595,3 +595,38 @@ svg.fill-grey {
 hr {
   border-color: var(--line);
 }
+
+/* ---------- Performance hardening ---------- */
+
+.marquee {
+  contain: layout paint style;
+}
+
+.marquee__track {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Prevent reflow from inline SVGs on decorative illustrations */
+.illustration-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  content-visibility: auto;
+  contain-intrinsic-size: 800px 600px;
+}
+
+/* Hero portrait image must not wait on lazy-load */
+.hero-portrait img {
+  content-visibility: visible;
+}
+
+/* Remove the global object-fit override — it was fighting GatsbyImage */
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Now opt-in to object-cover only where needed via imgClassName (your components already do this) */

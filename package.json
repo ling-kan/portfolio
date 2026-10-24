@@ -89,6 +89,7 @@
     "gh-pages": "^6.3.0",
     "postcss": "^8.5.6",
     "sass": "^1.90.0",
+    "sharp-cli": "^6.1.0",
     "tailwindcss": "^4.1.18"
   },
   "overrides": {
