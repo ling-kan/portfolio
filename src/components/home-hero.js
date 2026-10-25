@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
 import useSafeReducedMotion from './motion/use-safe-reduced-motion'
 import { GatsbyImage } from 'gatsby-plugin-image'
-import { useAnimate, useInView } from 'motion/react'
+import { AnimatePresence, motion, useInView } from 'motion/react'
 import { ArrowDownRightIcon, ArrowRightIcon } from '@heroicons/react/24/solid'
 import Container from './container'
 import Marquee from './motion/marquee'
@@ -10,10 +10,19 @@ import RotatingBadge from './motion/rotating-badge'
 import { EASE } from './motion/reveal'
 import Socials from './socials'
 
-const RoleTicker = ({ roles = [], ready = true }) => {
+/* -------------------------------------------------------------------------- */
+/*  RoleTicker — Motion AnimatePresence slide                                */
+/*  ~1 React render per role change (vs. one per char in the typing variant) */
+/* -------------------------------------------------------------------------- */
+const RoleTicker = memo(function RoleTicker({ roles = [], ready = true }) {
   const reduce = useSafeReducedMotion()
   const [index, setIndex] = useState(0)
-  const [scope, animateRole] = useAnimate()
+
+  // Memoize the longest role so the invisible spacer doesn't recompute
+  const longest = useMemo(
+    () => roles.reduce((a, b) => (a.length >= b.length ? a : b), ''),
+    [roles],
+  )
 
   useEffect(() => {
     if (!ready || reduce || roles.length < 2) return undefined
@@ -21,76 +30,90 @@ const RoleTicker = ({ roles = [], ready = true }) => {
     return () => clearInterval(id)
   }, [ready, reduce, roles.length])
 
-  useEffect(() => {
-    if (!scope.current || !ready || reduce) return
-    animateRole(
-      scope.current,
-      { y: ['100%', '0%'], opacity: [0, 1] },
-      { duration: 0.7, ease: EASE },
-    )
-  }, [index, ready, reduce, animateRole, scope])
-
   if (!roles.length) return null
   if (reduce) return <span>{roles.join(' · ')}</span>
 
   return (
     <span className="relative block overflow-hidden h-[1.2em]">
-      <span
-        key={index}
-        ref={scope}
-        className="block whitespace-nowrap leading-[1.2]"
-        style={{ transform: 'translate3d(0, 100%, 0)', opacity: 0 }}
-      >
-        {roles[index]}
+      {/* Invisible spacer keeps width stable across roles */}
+      <span aria-hidden="true" className="invisible whitespace-nowrap">
+        {longest}
+      </span>
+      <span className="absolute inset-0">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={index}
+            initial={{ y: '100%', opacity: 0 }}
+            animate={{ y: '0%', opacity: 1 }}
+            exit={{ y: '-100%', opacity: 0 }}
+            transition={{ duration: 0.45, ease: EASE }}
+            className="block whitespace-nowrap leading-[1.2]"
+            style={{ willChange: 'transform, opacity' }}
+          >
+            {roles[index]}
+          </motion.span>
+        </AnimatePresence>
       </span>
     </span>
   )
+})
+
+/* -------------------------------------------------------------------------- */
+/*  Letters — Motion variants + staggerChildren (no DOM queries, no delays)  */
+/* -------------------------------------------------------------------------- */
+const letterVariants = {
+  hidden: { y: '105%' },
+  visible: (i) => ({
+    y: '0%',
+    transition: { duration: 0.8, ease: EASE, delay: i * 0.01 },
+  }),
 }
 
-/**
- * Letters: one animate() call on the container's children.
- */
-const Letters = ({ word, delay = 0, className = '', ready = true }) => {
+const Letters = memo(function Letters({ word, delay = 0, className = '', ready = true }) {
   const reduce = useSafeReducedMotion()
-  const [mounted, setMounted] = useState(false)
-  const [scope, animateLetters] = useAnimate()
+  const hasAnimated = useRef(false)
   const display = className.includes('inline') ? '' : 'block'
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  // Once the hero is in view, lock animation on so it can't restart
+  if (ready && !hasAnimated.current) hasAnimated.current = true
 
-  useEffect(() => {
-    if (!mounted || reduce || !ready || !scope.current) return
-    const els = scope.current.querySelectorAll('.hero-letter')
-    if (!els.length) return
-    animateLetters(
-      els,
-      { y: ['105%', '0%'] },
-      { duration: 0.8, ease: EASE, delay: (i) => delay + i * 0.01 },
-    )
-  }, [mounted, reduce, ready, animateLetters, scope, delay])
-
-  if (!mounted || reduce) {
+  if (reduce || !ready) {
     return <span className={`${display} ${className}`}>{word}</span>
   }
 
   return (
     <span
-      ref={scope}
       className={`${display} overflow-hidden pb-[0.08em] ${className}`}
       aria-hidden="true"
     >
-      {Array.from(word).map((char, i) => (
-        <span key={i} className="hero-letter inline-block" style={{ transform: 'translate3d(0, 105%, 0)' }}>
-          {char === ' ' ? '\u00A0' : char}
-        </span>
-      ))}
+      <motion.span
+        className="inline-block"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          visible: { transition: { staggerChildren: 0.01, delayChildren: delay } },
+        }}
+      >
+        {Array.from(word).map((char, i) => (
+          <motion.span
+            key={`${char}-${i}`}
+            custom={i}
+            variants={letterVariants}
+            className="inline-block"
+            style={{ willChange: 'transform' }}
+          >
+            {char === ' ' ? '\u00A0' : char}
+          </motion.span>
+        ))}
+      </motion.span>
     </span>
   )
-}
+})
 
-const HomeHero = ({
+/* -------------------------------------------------------------------------- */
+/*  HomeHero                                                                  */
+/* -------------------------------------------------------------------------- */
+const HomeHero = memo(function HomeHero({
   name = '',
   animatedList = [],
   image,
@@ -100,7 +123,7 @@ const HomeHero = ({
   secondaryCta = 'Get in touch',
   availability,
   cvUrl,
-}) => {
+}) {
   const reduce = useSafeReducedMotion()
   const sectionRef = useRef(null)
   const ready = useInView(sectionRef, { once: true, amount: 0.05 })
@@ -109,7 +132,15 @@ const HomeHero = ({
   const [first, ...rest] = safeName.trim().split(' ')
   const last = rest.join(' ')
   const hasPortrait = Boolean(image?.gatsbyImageData)
-  const roles = animatedList || []
+  const roles = animatedList
+
+  // Stable array identity for Marquee items so it isn't re-mapped every render
+  const marqueeContent = useMemo(
+    () => (marqueeItems?.length ? marqueeItems : roles),
+    [marqueeItems, roles],
+  )
+
+  const year = useMemo(() => new Date().getFullYear(), [])
 
   return (
     <section
@@ -223,7 +254,7 @@ const HomeHero = ({
                 <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-ink/80 via-ink/30 to-transparent" />
                 <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between text-paper text-[0.75rem] font-medium">
                   <span className="uppercase tracking-wider">{name}</span>
-                  <span>©{new Date().getFullYear()}</span>
+                  <span>©{year}</span>
                 </div>
               </div>
 
@@ -250,7 +281,7 @@ const HomeHero = ({
 
       <div className="relative md:mt-20 py-6">
         <Marquee duration={50} gap="2.5rem">
-          {(marqueeItems?.length ? marqueeItems : roles).map((item, i) => (
+          {marqueeContent.map((item, i) => (
             <span
               key={`${item}-${i}`}
               className="flex items-center gap-10 font-sans text-base md:text-lg font-medium text-ink/70 whitespace-nowrap"
@@ -263,6 +294,6 @@ const HomeHero = ({
       </div>
     </section>
   )
-}
+})
 
 export default HomeHero
