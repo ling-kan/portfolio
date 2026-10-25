@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import useSafeReducedMotion from './motion/use-safe-reduced-motion'
 import { motion, animate } from 'motion/react'
-import { EASE, useRevealInView } from './motion/reveal'
+import { EASE, useInViewOnce } from './motion/reveal'
 
-// "£2.5M" -> { prefix: "£", number: 2.5, suffix: "M", decimals: 1 }
 const parseValue = (value = '') => {
   const match = String(value).match(/^([^\d-]*)(-?[\d,]*\.?\d+)(.*)$/)
   if (!match) return null
@@ -49,26 +48,21 @@ const AnimatedNumber = ({ value, start, reduce }) => {
 }
 
 const KeyMetrics = ({ list = [] }) => {
-  const { ref, controls, entered, animated } = useRevealInView(0.1)
+  const { ref, inView: entered } = useInViewOnce(0.1)
   const reduce = useSafeReducedMotion()
 
   return (
-    <motion.div
+    <div
       ref={ref}
-      initial={false}
-      animate={reduce ? 'show' : controls}
-      variants={{ hidden: {}, show: {} }}
-      transition={{ staggerChildren: 0.06 }}
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-paper/10 rounded-[1.5rem] overflow-hidden border border-paper/10"
+      className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-paper/10 rounded-[1.5rem] overflow-hidden border border-paper/10 stagger ${
+        entered ? 'is-visible' : ''
+      }`}
+      style={{ '--stagger-step': '0.06s' }}
     >
       {list.map((stat, i) => (
-        <motion.div
+        <div
           key={stat.label}
-          className="group relative bg-ink p-8 md:p-10 min-h-[14rem] flex flex-col justify-between overflow-hidden"
-          variants={{
-            hidden: { opacity: 0, y: 16 },
-            show: { opacity: 1, y: 0, transition: { duration: 0.8, delay: i * 0.04, ease: EASE } },
-          }}
+          className="stagger-item group relative bg-ink p-8 md:p-10 min-h-[14rem] flex flex-col justify-between overflow-hidden"
         >
           <div
             aria-hidden="true"
@@ -77,21 +71,20 @@ const KeyMetrics = ({ list = [] }) => {
           <span className="eyebrow text-paper/65">{String(i + 1).padStart(2, '0')}</span>
           <div className="relative">
             <p className="display-lg !text-[clamp(2.75rem,5vw,4.5rem)] text-paper">
-              <AnimatedNumber value={stat.value} start={entered} reduce={reduce || !animated} />
+              <AnimatedNumber value={stat.value} start={entered} reduce={reduce || !entered} />
             </p>
             <p className="mt-3 text-paper/70 text-base max-w-[16rem]">{stat.label}</p>
             <motion.span
               aria-hidden="true"
               className="block mt-6 h-px bg-paper/30 origin-left"
-              variants={{
-                hidden: { scaleX: 0 },
-                show: { scaleX: 1, transition: { duration: 0.8, delay: 0.1 + i * 0.04, ease: EASE } },
-              }}
+              initial={false}
+              animate={entered ? { scaleX: 1 } : { scaleX: 0 }}
+              transition={{ duration: 0.8, delay: 0.1 + i * 0.04, ease: EASE }}
             />
           </div>
-        </motion.div>
+        </div>
       ))}
-    </motion.div>
+    </div>
   )
 }
 

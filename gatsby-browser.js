@@ -1,9 +1,12 @@
-import "./src/styles/variables.scss";
-import "./src/styles/tailwind.css";
-import "./src/styles/global.scss";
-import "./src/styles/image.scss";
-import "./src/styles/reveal-preloader.scss";
+import '@fontsource/inter/400.css'
+import '@fontsource/inter/500.css'
+import '@fontsource/inter/600.css'
+import '@fontsource/playfair-display/500.css'
+import '@fontsource/playfair-display/500-italic.css'
 
+import './src/styles/tailwind.css'
+import './src/styles/variables.scss'
+import './src/styles/global.scss'
 
 import React from "react"
 import { AnimatePresence } from "motion/react"

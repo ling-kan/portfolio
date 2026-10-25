@@ -2,11 +2,11 @@ import React, { useState } from 'react'
 import useSafeReducedMotion from './motion/use-safe-reduced-motion'
 import { motion, AnimatePresence } from 'motion/react'
 import ImageSlot, { hasImage } from './image-slot'
-import { EASE, useRevealInView } from './motion/reveal'
+import { EASE, useInViewOnce } from './motion/reveal'
 
 const SkillsPanel = ({ list = [], image }) => {
   const reduce = useSafeReducedMotion()
-  const { ref, controls, entered } = useRevealInView(0.1)
+  const { ref, inView: entered } = useInViewOnce(0.1)
   const [active, setActive] = useState(0)
   const [focused, setFocused] = useState(null)
   const section = list[active] || { skills: [] }
@@ -20,18 +20,13 @@ const SkillsPanel = ({ list = [], image }) => {
   }
 
   return (
-    <motion.div
+    <div
       ref={ref}
-      initial={false}
-      animate={reduce ? 'show' : controls}
-      variants={{
-        hidden: { opacity: 0, y: 12 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: EASE } },
-      }}
-      className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12"
+      className={`grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 reveal ${
+        entered ? 'is-visible' : ''
+      }`}
     >
       <div className="lg:col-span-6">
-        {/* Category tabs */}
         <div role="tablist" aria-label="Skill categories" className="flex flex-wrap gap-2 mb-10">
           {list.map((cat, i) => (
             <button
@@ -55,13 +50,12 @@ const SkillsPanel = ({ list = [], image }) => {
           ))}
         </div>
 
-        {/* Skill chips */}
         <AnimatePresence mode="wait">
           <motion.ul
             key={section.category}
             className="flex flex-wrap gap-3"
             initial={false}
-            animate={reduce ? 'show' : controls}
+            animate="show"
             exit="exit"
             variants={{
               hidden: {},
@@ -76,7 +70,12 @@ const SkillsPanel = ({ list = [], image }) => {
                   key={skill.name}
                   variants={{
                     hidden: { opacity: 0, y: 20, scale: 0.9 },
-                    show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, ease: EASE } },
+                    show: {
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                      transition: { duration: 0.8, ease: EASE },
+                    },
                   }}
                 >
                   <button
@@ -100,7 +99,6 @@ const SkillsPanel = ({ list = [], image }) => {
         </AnimatePresence>
       </div>
 
-      {/* Detail card */}
       <aside className="lg:col-span-6">
         <div className="relative rounded-[1.5rem] bg-ink text-paper p-8 md:p-10 overflow-hidden min-h-[22rem] lg:sticky lg:top-28">
           {withImage && (
@@ -119,7 +117,11 @@ const SkillsPanel = ({ list = [], image }) => {
               className="relative mt-8"
             >
               <h3 className="display-md text-paper">{detail?.name}</h3>
-              {detail?.description && <p className="mt-4 text-paper/70 text-base md:text-lg leading-relaxed max-w-prose">{detail.description}</p>}
+              {detail?.description && (
+                <p className="mt-4 text-paper/70 text-base md:text-lg leading-relaxed max-w-prose">
+                  {detail.description}
+                </p>
+              )}
             </motion.div>
           </AnimatePresence>
           <p className="relative mt-10 eyebrow text-paper/65">
@@ -127,7 +129,7 @@ const SkillsPanel = ({ list = [], image }) => {
           </p>
         </div>
       </aside>
-    </motion.div>
+    </div>
   )
 }
 

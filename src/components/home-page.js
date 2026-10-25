@@ -4,22 +4,17 @@ import Layout from './layout'
 import HomeHero from './home-hero'
 import Section from './section'
 import AboutSection from './about-section'
+import ContactCta from './contact-cta'
+import LogoStrip from './logo-strip'
+import ValuePillars from './value-pillars'
+import ImageReel from './image-reel'
 import KeyMetrics from './key-metrics'
 import SkillsPanel from './skills-panel'
 import Resume from './resume'
 import ArticlePreview from './article-preview'
-import ContactCta from './contact-cta'
-import ImageReel from './image-reel'
-import LogoStrip from './logo-strip'
-import ValuePillars from './value-pillars'
 import Testimonials from './testimonials'
 import useSafeReducedMotion from './motion/use-safe-reduced-motion'
 
-/**
- * The home page, structured as a positioning pitch:
- * intro → about + what I bring → impact → expertise → experience → education → selected work → testimonials → contact.
- * All copy comes from Contentful; see docs/CONTENT-MODEL.md.
- */
 const HomePage = (props) => {
   const posts = get(props, 'data.allContentfulBlogPost.nodes', [])
   const [author = {}] = get(props, 'data.allContentfulLanding.nodes', [])
@@ -35,7 +30,10 @@ const HomePage = (props) => {
   useEffect(() => {
     if (!hash) return undefined
     const id = setTimeout(
-      () => document.querySelector(hash)?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' }),
+      () =>
+        document
+          .querySelector(hash)
+          ?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' }),
       500,
     )
     return () => clearTimeout(id)
@@ -53,9 +51,10 @@ const HomePage = (props) => {
   }
 
   const visiblePosts = posts.filter((p) => !p.hiddenPage)
-  const skillNames = (author.skills || []).flatMap((s) => (s.skills || []).map((k) => k.name))
+  const skillNames = (author.skills || []).flatMap((s) =>
+    (s.skills || []).map((k) => k.name),
+  )
 
-  // Number sections by what is actually present so the sequence never skips.
   let n = 0
   const next = () => String(++n).padStart(2, '0')
 
@@ -84,7 +83,14 @@ const HomePage = (props) => {
       />
 
       {author.bio?.childMarkdownRemark?.html && (
-        <Section id="about" number={next()} eyebrow={about.eyebrow} title={about.title} highlight={about.highlight} intro={about.intro}>
+        <Section
+          id="about"
+          number={next()}
+          eyebrow={about.eyebrow}
+          title={about.title}
+          highlight={about.highlight}
+          intro={about.intro}
+        >
           <AboutSection
             html={author.bio.childMarkdownRemark.html}
             image={settings.aboutImage?.gatsbyImageData}
@@ -108,7 +114,10 @@ const HomePage = (props) => {
           intro={impact.intro}
           className="overflow-hidden"
           backdrop={
-            <div aria-hidden="true" className="absolute -top-40 -right-40 w-[36rem] h-[36rem] rounded-full bg-mint/10 blur-[120px] pointer-events-none" />
+            <div
+              aria-hidden="true"
+              className="absolute -top-40 -right-40 w-[36rem] h-[36rem] rounded-full bg-mint/10 blur-[120px] pointer-events-none"
+            />
           }
         >
           <KeyMetrics list={author.keyMetrics} />
@@ -169,7 +178,14 @@ const HomePage = (props) => {
       )}
 
       {visiblePosts.length > 0 && (
-        <Section id="portfolio" number={next()} eyebrow={work.eyebrow} title={work.title} highlight={work.highlight} intro={work.intro}>
+        <Section
+          id="portfolio"
+          number={next()}
+          eyebrow={work.eyebrow}
+          title={work.title}
+          highlight={work.highlight}
+          intro={work.intro}
+        >
           <ArticlePreview posts={posts} limit={settings.featuredProjectCount} />
         </Section>
       )}

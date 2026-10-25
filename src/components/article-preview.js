@@ -4,12 +4,12 @@ import { Link } from 'gatsby'
 import { GatsbyImage } from 'gatsby-plugin-image'
 import { motion, useMotionValue, useSpring } from 'motion/react'
 import { ArrowUpRightIcon, LockClosedIcon } from '@heroicons/react/24/solid'
-import { EASE, useRevealInView } from './motion/reveal'
+import { EASE, useInViewOnce } from './motion/reveal'
 
 const ProjectCard = ({ post, index }) => {
   const imageFrameRef = useRef(null)
   const reduce = useSafeReducedMotion()
-  const { ref: revealRef, controls: revealControls } = useRevealInView(0.1)
+  const { ref: revealRef, inView } = useInViewOnce(0.1)
   const [hover, setHover] = useState(false)
 
   const cx = useMotionValue(0)
@@ -20,14 +20,12 @@ const ProjectCard = ({ post, index }) => {
   const onMove = (e) => {
     const rect = imageFrameRef.current?.getBoundingClientRect()
     if (!rect) return
-
     const withinImage =
       e.clientX >= rect.left &&
       e.clientX <= rect.right &&
       e.clientY >= rect.top &&
       e.clientY <= rect.bottom
-
-    setHover((current) => (current === withinImage ? current : withinImage))
+    setHover((curr) => (curr === withinImage ? curr : withinImage))
     cx.set(e.clientX - rect.left)
     cy.set(e.clientY - rect.top)
   }
@@ -35,13 +33,10 @@ const ProjectCard = ({ post, index }) => {
   const html = post.description?.childMarkdownRemark?.html
 
   return (
-    <motion.li
+    <li
       ref={revealRef}
-      className="list-none"
-      initial={false}
-      animate={reduce ? 'show' : revealControls}
-      transition={{ duration: 0.8, ease: EASE }}
-      variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } }}
+      className={`list-none reveal ${inView ? 'is-visible' : ''}`}
+      style={{ '--reveal-y': '16px' }}
     >
       <Link
         to={`/portfolio/${post.slug}`}
@@ -106,7 +101,10 @@ const ProjectCard = ({ post, index }) => {
               </p>
             )}
             {html && (
-              <div className="rich-text mt-3 text-ink/75 line-clamp-2 max-w-lg" dangerouslySetInnerHTML={{ __html: html }} />
+              <div
+                className="rich-text mt-3 text-ink/75 line-clamp-2 max-w-lg"
+                dangerouslySetInnerHTML={{ __html: html }}
+              />
             )}
           </div>
           <span className="shrink-0 grid place-items-center w-12 h-12 rounded-full border border-ink/20 group-hover:bg-ink group-hover:border-ink transition-all duration-500 group-hover:rotate-45">
@@ -114,10 +112,9 @@ const ProjectCard = ({ post, index }) => {
           </span>
         </div>
       </Link>
-    </motion.li>
+    </li>
   )
 }
-
 
 const ArticlePreview = ({ posts, limit }) => {
   if (!Array.isArray(posts)) return null

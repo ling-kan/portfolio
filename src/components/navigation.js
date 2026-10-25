@@ -11,24 +11,21 @@ const Navigation = ({ navList }) => {
   const reduce = useSafeReducedMotion()
   const [mobileNav, setMobileNav] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const lastScrollY = useRef(0)
   const scrolledRef = useRef(false)
+  const lastScrollY = useRef(0)
   const { scrollY } = useScroll()
 
+  // Only setState when the boolean flips. Most frames are a no-op.
   useMotionValueEvent(scrollY, 'change', (y) => {
-    const previousY = lastScrollY.current
-    if (Math.abs(y - previousY) < 4) return
-
+    if (Math.abs(y - lastScrollY.current) < 4) return
     lastScrollY.current = y
-    const nextScrolled = y > 20
-
-    if (scrolledRef.current !== nextScrolled) {
-      scrolledRef.current = nextScrolled
-      setScrolled(nextScrolled)
+    const next = y > 20
+    if (next !== scrolledRef.current) {
+      scrolledRef.current = next
+      setScrolled(next)
     }
   })
 
-  // Lock page scroll while the mobile menu is open
   useEffect(() => {
     document.body.style.overflow = mobileNav ? 'hidden' : ''
     return () => {
@@ -126,7 +123,7 @@ const Navigation = ({ navList }) => {
             }
             animate={{ clipPath: 'circle(150% at calc(100% - 3rem) 2.5rem)' }}
             exit={{ clipPath: 'circle(0% at calc(100% - 3rem) 2.5rem)' }}
-            transition={{ duration: reduce ? 0 : 0.25, ease: EASE }}
+            transition={{ duration: reduce ? 0 : 0.3, ease: EASE }}
           >
             <Container className="relative flex-1 flex flex-col">
               <p className="eyebrow text-paper/65 mb-6">Menu</p>

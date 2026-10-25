@@ -1,6 +1,6 @@
-require("dotenv").config({
+require('dotenv').config({
   path: `.env.${process.env.NODE_ENV}`,
-});
+})
 
 function checkEnv(envName) {
   if (!process.env[envName]) {
@@ -67,6 +67,15 @@ module.exports = {
         rule: { include: /assets/ }
       }
     },
+    {
+    resolve: 'gatsby-plugin-webpack-bundle-analyser-v2',
+    options: {
+      analyzerMode: 'static',
+      reportFilename: 'bundle-report.html',
+      openAnalyzer: false,
+      defaultSizes: 'gzip',
+    },
+  },
     {
       resolve: `gatsby-plugin-manifest`,
       options: {

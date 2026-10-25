@@ -4,7 +4,7 @@
   font-size: var(--text-prose);
   letter-spacing: var(--text-prose-tracking);
   line-height: var(--loose);
-  color: rgba(23,51,43, 0.82);
+  color: rgba(23, 51, 43, 0.82);
   max-width: 46rem;
 }
 
@@ -80,10 +80,11 @@
   margin: 2.5em 0;
   padding: 0 0 0 1.5em;
   border-left: 3px solid var(--accent);
-  font-family: var(--font-accent);
-  font-weight: 500;
-  font-size: clamp(1.35rem, 2.2vw, 1.85rem);
-  line-height: 1.35;
+  font-family: inherit;
+  font-style: normal;
+  font-weight: var(--medium);
+  font-size: clamp(1.15rem, 1.6vw, 1.35rem);
+  line-height: 1.6;
   color: var(--ink);
 }
 

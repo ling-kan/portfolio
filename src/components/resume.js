@@ -3,24 +3,21 @@ import useSafeReducedMotion from './motion/use-safe-reduced-motion'
 import { motion, AnimatePresence, useScroll, useSpring } from 'motion/react'
 import { GatsbyImage } from 'gatsby-plugin-image'
 import { PlusIcon, MinusIcon } from '@heroicons/react/24/solid'
-import { EASE, useRevealInView } from './motion/reveal'
+import { EASE, useInViewOnce } from './motion/reveal'
 
 const TimelineItem = ({ event, index, open, onToggle, idPrefix }) => {
-  const reduce = useSafeReducedMotion()
-  const { ref, controls } = useRevealInView(0.1)
+  const { ref, inView } = useInViewOnce(0.1)
   const hasBio = !!event?.bio?.childMarkdownRemark?.html
   const bioId = `${idPrefix}-bio-${index}`
 
   return (
-    <motion.li
+    <li
       ref={ref}
-      className="relative grid grid-cols-[2.5rem_1fr] md:grid-cols-[11rem_3rem_1fr] gap-x-4 md:gap-x-6 pb-14 last:pb-0"
-      initial={false}
-      animate={reduce ? 'show' : controls}
-      transition={{ duration: 0.8, ease: EASE }}
-      variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } }}
+      className={`relative grid grid-cols-[2.5rem_1fr] md:grid-cols-[11rem_3rem_1fr] gap-x-4 md:gap-x-6 pb-14 last:pb-0 reveal ${
+        inView ? 'is-visible' : ''
+      }`}
+      style={{ '--reveal-y': '16px' }}
     >
-      {/* Date (desktop) */}
       <div className="hidden md:block pt-2 text-right">
         <p className="eyebrow text-ink/75 leading-relaxed">
           {event.startDate}
@@ -31,32 +28,43 @@ const TimelineItem = ({ event, index, open, onToggle, idPrefix }) => {
         </p>
       </div>
 
-      {/* Node on the spine */}
       <div className="relative flex justify-center">
         <div className="relative z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-paper border border-line shadow-sm overflow-hidden grid place-items-center">
           {event?.icon?.gatsbyImageData ? (
-            <GatsbyImage image={event.icon.gatsbyImageData} alt={`${event.company} logo`} className="w-full h-full" imgClassName="object-contain p-1.5" />
+            <GatsbyImage
+              image={event.icon.gatsbyImageData}
+              alt={`${event.company} logo`}
+              className="w-full h-full"
+              imgClassName="object-contain p-1.5"
+            />
           ) : (
             <span className="font-display font-semibold text-ink">{event.company?.[0]}</span>
           )}
         </div>
         {event.currentRole && (
-          <span aria-hidden="true" className="absolute top-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-accent/40 animate-ping" />
+          <span
+            aria-hidden="true"
+            className="absolute top-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-accent/40 animate-ping"
+          />
         )}
       </div>
 
-      {/* Content card */}
       <div className="group rounded-[1.5rem] border border-line bg-paper/70 hover:bg-white hover:shadow-[0_30px_60px_-30px_rgba(23,51,43,0.35)] hover:-translate-y-1 transition-all duration-500 p-6 md:p-8">
         <p className="md:hidden eyebrow text-ink/75 mb-3">
-          {event.startDate} — {event.currentRole ? <span className="text-accent">Present</span> : event.endDate}
+          {event.startDate} —{' '}
+          {event.currentRole ? <span className="text-accent">Present</span> : event.endDate}
         </p>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="font-display text-2xl md:text-3xl font-semibold tracking-tight text-ink">{event.jobTitle}</h3>
+            <h3 className="font-display text-2xl md:text-3xl font-semibold tracking-tight text-ink">
+              {event.jobTitle}
+            </h3>
             <p className="mt-1 text-ink/75 font-medium">{event.company}</p>
           </div>
           {event.currentRole && (
-            <span className="eyebrow !text-[0.7rem] rounded-full bg-accent/10 text-accent px-3 py-1.5">Current role</span>
+            <span className="eyebrow !text-[0.7rem] rounded-full bg-accent/10 text-accent px-3 py-1.5">
+              Current role
+            </span>
           )}
         </div>
 
@@ -106,7 +114,7 @@ const TimelineItem = ({ event, index, open, onToggle, idPrefix }) => {
           </>
         )}
       </div>
-    </motion.li>
+    </li>
   )
 }
 
@@ -115,16 +123,19 @@ const Resume = ({ timeline = [], initialCount = 6, idPrefix = 'timeline' }) => {
   const reduce = useSafeReducedMotion()
   const [showAll, setShowAll] = useState(false)
   const [open, setOpen] = useState([])
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.75', 'end 0.6'] })
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['start 0.75', 'end 0.6'],
+  })
   const spine = useSpring(scrollYProgress, { stiffness: 90, damping: 25 })
 
   const items = showAll ? timeline : timeline.slice(0, initialCount)
-  const toggle = (i) => setOpen((prev) => (prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]))
+  const toggle = (i) =>
+    setOpen((prev) => (prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]))
 
   return (
     <div>
       <div ref={ref} className="relative">
-        {/* Spine: faint track + scroll-driven fill */}
         <div
           aria-hidden="true"
           className="absolute top-0 bottom-0 left-5 md:left-[calc(11rem+1.5rem+1.5rem)] w-px -translate-x-1/2 bg-ink/10"
@@ -156,7 +167,11 @@ const Resume = ({ timeline = [], initialCount = 6, idPrefix = 'timeline' }) => {
             className="inline-flex items-center gap-3 rounded-full border border-ink/20 px-6 py-3 font-medium !text-ink hover:bg-ink hover:!text-paper transition-colors duration-300 group"
           >
             {showAll ? 'Show fewer roles' : `Show ${timeline.length - initialCount} earlier roles`}
-            <PlusIcon className={`w-4 h-4 no-fill fill-current transition-transform duration-500 ${showAll ? 'rotate-45' : ''}`} />
+            <PlusIcon
+              className={`w-4 h-4 no-fill fill-current transition-transform duration-500 ${
+                showAll ? 'rotate-45' : ''
+              }`}
+            />
           </button>
         </div>
       )}

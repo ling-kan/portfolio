@@ -1,17 +1,14 @@
 import React from 'react'
-import { motion, useScroll, useTransform } from 'motion/react'
 
-const ScrollProgress = () => {
-  const { scrollYProgress } = useScroll()
-  const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1])
-
-  return (
-    <motion.div
-      aria-hidden="true"
-      className="fixed top-0 left-0 right-0 h-[3px] bg-accent origin-left z-[60]"
-      style={{ scaleX }}
-    />
-  )
-}
+/**
+ * Progress bar driven entirely by CSS `animation-timeline: scroll()`.
+ * Zero JS per frame. Falls back to hidden on unsupported browsers.
+ */
+const ScrollProgress = () => (
+  <div
+    aria-hidden="true"
+    className="scroll-progress fixed top-0 left-0 right-0 h-[3px] bg-accent origin-left z-[60]"
+  />
+)
 
 export default ScrollProgress

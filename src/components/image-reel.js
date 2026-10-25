@@ -1,15 +1,9 @@
 import React from 'react'
 import { Link } from 'gatsby'
 import { GatsbyImage } from 'gatsby-plugin-image'
-import { motion } from 'motion/react'
 import Marquee from './motion/marquee'
-import useSafeReducedMotion from './motion/use-safe-reduced-motion'
-import { useRevealInView } from './motion/reveal'
+import { useInViewOnce } from './motion/reveal'
 
-/**
- * Two counter-scrolling rows of project imagery.
- * Each tile goes from greyscale to colour on hover and links to its case study.
- */
 const Tile = ({ post }) => (
   <Link
     to={`/portfolio/${post.slug}`}
@@ -29,32 +23,31 @@ const Tile = ({ post }) => (
 )
 
 const ImageReel = ({ posts = [] }) => {
-  const reduce = useSafeReducedMotion()
-  const { ref, controls } = useRevealInView(0.1)
-
+  const { ref, inView } = useInViewOnce(0.1)
   const items = posts.filter((p) => !p.hiddenPage && p.heroImage?.gatsbyImageData)
+
   if (items.length < 3) return null
   const half = Math.ceil(items.length / 2)
-  const rows = [items.slice(0, half), items.slice(half).concat(items.slice(0, Math.max(0, half - (items.length - half))))]
+  const rows = [
+    items.slice(0, half),
+    items
+      .slice(half)
+      .concat(items.slice(0, Math.max(0, half - (items.length - half)))),
+  ]
 
   return (
-    <section aria-label="Project gallery" className="relative pb-12 md:pb-24 overflow-hidden">
-      <motion.div
-        ref={ref}
-        initial={false}
-        animate={reduce ? 'show' : controls}
-        variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="space-y-5"
-      >
-        {rows.map((row, i) => (
-          <Marquee key={i} duration={60 + i * 12} gap="1.25rem" reverse={i === 1}>
-            {row.map((post) => (
-              <Tile key={`${i}-${post.slug}`} post={post} />
-            ))}
-          </Marquee>
-        ))}
-      </motion.div>
+    <section ref={ref} aria-label="Project gallery" className="relative pb-12 md:pb-24 overflow-hidden">
+      {inView && (
+        <div className="space-y-5">
+          {rows.map((row, i) => (
+            <Marquee key={i} duration={60 + i * 12} gap="1.25rem" reverse={i === 1}>
+              {row.map((post) => (
+                <Tile key={`${i}-${post.slug}`} post={post} />
+              ))}
+            </Marquee>
+          ))}
+        </div>
+      )}
     </section>
   )
 }

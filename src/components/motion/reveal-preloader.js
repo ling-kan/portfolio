@@ -2,43 +2,33 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import { motion, AnimatePresence, animate } from 'motion/react'
 import { EASE } from './reveal'
 
-const SESSION_KEY = 'lk-intro-played'
+const SESSION_KEY = 'intro-played'
 
 const IntroContext = createContext(true)
-/** True once the preloader curtain has lifted (or immediately if it never shows). */
 export const useIntroReady = () => useContext(IntroContext)
 
-/**
- * Determines whether the intro *should* animate once we're on the client.
- * Always returns false during SSR.
- */
 const shouldPlayIntro = (skipAnimation) => {
   if (typeof window === 'undefined') return false
   if (skipAnimation) return false
   try {
     if (window.sessionStorage.getItem(SESSION_KEY)) return false
   } catch (e) {
-    /* storage unavailable — default to playing */
+    /* storage unavailable */
   }
   const connection = navigator.connection
   if (connection?.saveData || ['slow-2g', '2g'].includes(connection?.effectiveType)) return false
+  if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) return false
+  if (navigator.deviceMemory && navigator.deviceMemory <= 2) return false
   return !window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-/**
- * The very first render must match the server HTML, so we ALWAYS start
- * with the curtain visible. On mount, we decide whether to animate it or
- * to remove it instantly. This avoids hydration mismatches entirely.
- */
 const RevealPreloader = ({
   brandName = 'LING KAN',
   label = 'Digital experience & growth',
   children,
-  duration = 1.6,
+  duration = 0.35,
   skipAnimation = false,
 }) => {
-  // `mounted` gates client-only behavior. It is false during SSR and on
-  // the first client render, then true after useEffect runs.
   const [mounted, setMounted] = useState(false)
   const [visible, setVisible] = useState(true)
   const [instant, setInstant] = useState(false)
@@ -54,7 +44,6 @@ const RevealPreloader = ({
     hasRun.current = true
 
     if (!shouldPlayIntro(skipAnimation)) {
-      // Skip instantly — but only *after* hydration
       setInstant(true)
       setVisible(false)
       return undefined
@@ -76,20 +65,18 @@ const RevealPreloader = ({
     return () => controls.stop()
   }, [mounted, duration, skipAnimation])
 
-  // The context value flips once the curtain is gone so children can begin
-  // entrance animations safely (client-only).
   const introDone = mounted && !visible
 
   return (
     <>
       <noscript>
-        <style>{'.lk-preloader{display:none!important}'}</style>
+        <style>{'.preloader{display:none!important}'}</style>
       </noscript>
       <AnimatePresence>
         {visible && (
           <motion.div
             key="preloader"
-            className="lk-preloader fixed inset-0 z-[9999] bg-ink text-paper flex flex-col justify-between p-6 md:p-10 overflow-hidden"
+            className="preloader fixed inset-0 z-[9999] bg-ink text-paper flex flex-col justify-between p-6 md:p-10 overflow-hidden"
             exit={instant ? { opacity: 0 } : { clipPath: 'inset(0 0 100% 0)' }}
             transition={{ duration: instant ? 0 : 0.9, ease: EASE }}
             aria-hidden="true"

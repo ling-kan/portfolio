@@ -31,26 +31,18 @@ const BlogPostTemplate = (props) => {
   const socials = get(props, "data.allContentfulSocials.nodes");
   const [loader, setLoader] = useState(true);
 
-  function checkLogin() {
-    if (post?.protectPage && !isLoggedIn()) {
-      navigate("/login")
-      return null
-    } else {
-      setLoader(false)
-    }
-  }
+  const loggedIn = typeof window !== 'undefined' && isLoggedIn()
+  const blocked = Boolean(post?.protectPage) && !loggedIn
 
   useEffect(() => {
-    checkLogin()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (blocked) navigate('/login')
+  }, [blocked])
 
   return (
     <>
-      {
-        loader ?
-          <Loader />
-          :
+      {blocked ? (
+        <Loader />
+      ) : (
           <Layout location={props.location} navigation={navigation} socials={socials} >
             <Seo
               title={post.title}
@@ -149,8 +141,8 @@ const BlogPostTemplate = (props) => {
                 </Container>
               </nav>
             )}
-          </Layout>
-      }
+        </Layout>
+      )}
     </>
   )
 }
