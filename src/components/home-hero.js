@@ -12,13 +12,16 @@ import Socials from './socials'
 
 /* -------------------------------------------------------------------------- */
 /*  RoleTicker — Motion AnimatePresence slide                                */
-/*  ~1 React render per role change (vs. one per char in the typing variant) */
+/*  4500ms cycle = 0.45s transition + ~4.05s fully-visible dwell             */
 /* -------------------------------------------------------------------------- */
-const RoleTicker = memo(function RoleTicker({ roles = [], ready = true }) {
+const RoleTicker = memo(function RoleTicker({
+  roles = [],
+  ready = true,
+  interval = 4500,
+}) {
   const reduce = useSafeReducedMotion()
   const [index, setIndex] = useState(0)
 
-  // Memoize the longest role so the invisible spacer doesn't recompute
   const longest = useMemo(
     () => roles.reduce((a, b) => (a.length >= b.length ? a : b), ''),
     [roles],
@@ -26,9 +29,9 @@ const RoleTicker = memo(function RoleTicker({ roles = [], ready = true }) {
 
   useEffect(() => {
     if (!ready || reduce || roles.length < 2) return undefined
-    const id = setInterval(() => setIndex((i) => (i + 1) % roles.length), 2800)
+    const id = setInterval(() => setIndex((i) => (i + 1) % roles.length), interval)
     return () => clearInterval(id)
-  }, [ready, reduce, roles.length])
+  }, [ready, reduce, roles.length, interval])
 
   if (!roles.length) return null
   if (reduce) return <span>{roles.join(' · ')}</span>
@@ -40,7 +43,7 @@ const RoleTicker = memo(function RoleTicker({ roles = [], ready = true }) {
         {longest}
       </span>
       <span className="absolute inset-0">
-        <AnimatePresence mode="wait" initial={false}>
+        <AnimatePresence mode="popLayout" initial={false}>
           <motion.span
             key={index}
             initial={{ y: '100%', opacity: 0 }}
@@ -59,7 +62,7 @@ const RoleTicker = memo(function RoleTicker({ roles = [], ready = true }) {
 })
 
 /* -------------------------------------------------------------------------- */
-/*  Letters — Motion variants + staggerChildren (no DOM queries, no delays)  */
+/*  Letters — Motion variants + staggerChildren                              */
 /* -------------------------------------------------------------------------- */
 const letterVariants = {
   hidden: { y: '105%' },
@@ -71,11 +74,7 @@ const letterVariants = {
 
 const Letters = memo(function Letters({ word, delay = 0, className = '', ready = true }) {
   const reduce = useSafeReducedMotion()
-  const hasAnimated = useRef(false)
   const display = className.includes('inline') ? '' : 'block'
-
-  // Once the hero is in view, lock animation on so it can't restart
-  if (ready && !hasAnimated.current) hasAnimated.current = true
 
   if (reduce || !ready) {
     return <span className={`${display} ${className}`}>{word}</span>
@@ -134,7 +133,6 @@ const HomeHero = memo(function HomeHero({
   const hasPortrait = Boolean(image?.gatsbyImageData)
   const roles = animatedList
 
-  // Stable array identity for Marquee items so it isn't re-mapped every render
   const marqueeContent = useMemo(
     () => (marqueeItems?.length ? marqueeItems : roles),
     [marqueeItems, roles],
